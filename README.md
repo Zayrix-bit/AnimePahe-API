@@ -143,6 +143,22 @@ Scraping and playing anime streams from AnimePahe is notoriously tricky due to m
   - When an episode is selected, `curl_cffi` fetches the Kwik embed page in **0.4s**, the unpacker decodes the tokens in **0.02s**, and extracts `https://vault-*.uwucdn.top/.../uwu.m3u8` instantly.
   - **Result**: Stream resolution drops from **15 seconds down to ~1.1 seconds**! If fast-path ever encounters a strange embed, it seamlessly falls back to Playwright headless clicking.
 
+### 6. Cloudflare & Kwik Rate Limit Bypass (HTTP 429 & Anti-Bot Defense)
+- **The Problem**: 
+  - AnimePahe and Kwik enforce Cloudflare Bot Fight Mode and strict IP rate limiting. Tools that hammer endpoints sequentially or concurrently get slapped with `HTTP 429 Too Many Requests` or Turnstile challenge interstitials.
+  - Standard HTTP requests lack valid clearance tokens (`cf_clearance`), causing Cloudflare to classify them as suspicious unverified bots.
+- **The Solution**:
+  1. **Cloudflare Session Cookie Synchronization**:
+     - `get_cf_cookies()` extracts live `cf_clearance` and `__cf_bm` cookies from the verified Playwright persistent context and injects them into high-speed `curl_cffi` requests.
+  2. **Adaptive Exponential Backoff & Jitter**:
+     - When an upstream `429 Too Many Requests` is detected, the engine inspects the `Retry-After` header. If absent, it applies exponential backoff (`delay = 1.5 * 2^attempt + random_jitter`) and retries automatically up to 4 times.
+  3. **Human Cadence & Jitter Pacing**:
+     - Prevents mechanical burst patterns by introducing organic micro-delays between consecutive calls, keeping requests safely under Cloudflare's sliding-window thresholds.
+  4. **Dynamic Proxy Routing**:
+     - Supports optional HTTP/SOCKS5 proxy rotation via constructor parameters or `ANIMEPAHE_PROXY` environment variable for massive scraping workloads.
+  5. **Resilient Browser Failover**:
+     - If direct fast-path requests ever hit a hard Turnstile challenge, the engine automatically fails over to the Playwright browser context, where Turnstile auto-clears.
+
 ---
 
 ## ⚖ Reverse Proxy vs Direct CDN: The VPS Bandwidth Dilemma

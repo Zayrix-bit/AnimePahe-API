@@ -323,7 +323,7 @@ def proxy_segment(url: str = Query(..., description="Upstream segment URL")):
 _IMAGE_CACHE = {}
 
 @app.get("/stream/image")
-def proxy_image(url: str = Query(..., description="Image URL")):
+async def proxy_image(url: str = Query(..., description="Image URL")):
     if url in _IMAGE_CACHE:
         content, ctype = _IMAGE_CACHE[url]
         return Response(
@@ -335,12 +335,13 @@ def proxy_image(url: str = Query(..., description="Image URL")):
             }
         )
     try:
+        cf_cookies = await scraper.get_cf_cookies()
         headers = {
             "Referer": "https://animepahe.pw/",
             "Origin": "https://animepahe.pw",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
         }
-        r = cffi_requests.get(url, headers=headers, impersonate="chrome124", timeout=12)
+        r = cffi_requests.get(url, headers=headers, cookies=cf_cookies, impersonate="chrome124", timeout=12)
         if r.status_code == 200:
             ctype = r.headers.get("content-type", "image/webp")
             if len(_IMAGE_CACHE) < 1000:
