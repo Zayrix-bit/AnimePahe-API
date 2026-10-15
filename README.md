@@ -337,7 +337,7 @@ The project includes a state-of-the-art anime streaming web app served at `http:
 
 ### Install Dependencies
 ```bash
-pip install fastapi uvicorn playwright curl_cffi requests psutil
+pip install -r requirements.txt
 ```
 
 ### Install Playwright Browsers

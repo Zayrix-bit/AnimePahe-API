@@ -1,0 +1,18 @@
+# ==============================================================================
+# AnimePahe High-Performance Stream Resolver & Web Lab
+# Python 3.10+ Compatibility
+# ==============================================================================
+
+# Core API Web Framework & High-Performance ASGI Engine
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+
+# Headless Browser Automation (Cloudflare Turnstile Clearance)
+playwright>=1.41.0
+
+# TLS Fingerprint Impersonation & Zero-Delay Fast-Path Decoders
+curl_cffi>=0.7.0
+requests>=2.31.0
+
+# Process & Profile Lock Management
+psutil>=5.9.0
