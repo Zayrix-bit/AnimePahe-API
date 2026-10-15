@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>AnimePahe Stream & Test Lab</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- ArtPlayer & Hls.js -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/artplayer@5.1.6/dist/artplayer.js"></script>
+    <!-- Styles -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Background Ambient Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
+    <!-- Navigation Header -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand-logo" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <div class="logo-icon"><i class="fa-solid fa-play"></i></div>
+                <div class="logo-text">
+                    <span class="logo-title">Pahe<span class="gradient-text">Stream</span></span>
+                    <span class="logo-badge">LAB</span>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search anime... (e.g. Demon Slayer, Solo Leveling)" autocomplete="off">
+                <button id="searchBtn" class="search-submit-btn">
+                    <span>Search</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <div class="nav-actions">
+                <a href="/docs" target="_blank" class="nav-link-btn" title="API Swagger Docs">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Swagger API</span>
+                </a>
+                <div class="status-indicator" title="Connected to Local Scraper">
+                    <span class="status-dot"></span>
+                    <span class="status-text">Engine Online</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Tags Suggestions -->
+        <div class="quick-tags">
+            <span class="tags-label">Trending:</span>
+            <button class="tag-chip" onclick="quickSearch('Demon Slayer')">Demon Slayer</button>
+            <button class="tag-chip" onclick="quickSearch('Solo Leveling')">Solo Leveling</button>
+            <button class="tag-chip" onclick="quickSearch('Chainsaw Man')">Chainsaw Man</button>
+            <button class="tag-chip" onclick="quickSearch('Jujutsu Kaisen')">Jujutsu Kaisen</button>
+            <button class="tag-chip" onclick="quickSearch('Naruto')">Naruto</button>
+            <button class="tag-chip" onclick="quickSearch('Bleach')">Bleach</button>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- Player & Stream Testing Stage (Displayed when an episode is selected) -->
+        <section id="playerSection" class="player-section hidden">
+            <div class="player-header">
+                <div class="now-playing-meta">
+                    <span class="meta-live-badge"><i class="fa-solid fa-circle-dot"></i> NOW STREAMING</span>
+                    <h2 id="playerAnimeTitle" class="player-anime-title">Anime Title</h2>
+                    <div class="player-episode-info">
+                        <span id="playerEpisodeBadge" class="badge-pill">Episode 1</span>
+                        <span id="playerDurationBadge" class="badge-pill"><i class="fa-regular fa-clock"></i> 24m</span>
+                        <span id="playerAudioBadge" class="badge-pill audio-pill">SUB</span>
+                    </div>
+                </div>
+
+                <!-- Player Switcher Tabs -->
+                <div class="player-tab-group">
+                    <button class="tab-btn active" onclick="switchPlayerMode('artplayer')" id="tabArt">
+                        <i class="fa-solid fa-play"></i>
+                        <span>ArtPlayer (HLS)</span>
+                    </button>
+                    <button class="tab-btn" onclick="switchPlayerMode('inspector')" id="tabInspector">
+                        <i class="fa-solid fa-terminal"></i>
+                        <span>CDN & M3U8 Inspector</span>
+                    </button>
+                    <button class="tab-btn" onclick="switchPlayerMode('kwik')" id="tabKwik">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                        <span>Kwik Embed</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Video Stage Area -->
+            <div class="player-viewport">
+                <!-- Mode 1: Custom ArtPlayer (Default) -->
+                <div id="artplayerContainer" class="viewport-layer"></div>
+
+                <!-- Mode 2: Kwik Native Iframe (With fallback helper) -->
+                <div id="kwikContainer" class="viewport-layer hidden">
+                    <div class="kwik-fallback-bar" style="padding: 12px 16px; background: rgba(15,23,42,0.95); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color);">
+                        <span style="font-size: 13px; color: var(--text-muted);"><i class="fa-solid fa-info-circle"></i> Kwik sends X-Frame-Options headers. If blocked by browser, open directly:</span>
+                        <a id="kwikExternalLink" href="#" target="_blank" class="download-trigger-btn" style="padding: 6px 14px; font-size: 12px; text-decoration: none;">
+                            <i class="fa-solid fa-up-right-from-square"></i> Open Kwik in New Tab
+                        </a>
+                    </div>
+                    <iframe id="kwikIframe" allowfullscreen scrolling="no" src="about:blank" style="flex: 1; border: none; width: 100%; height: calc(100% - 45px);"></iframe>
+                </div>
+
+                <!-- Mode 3: CDN & M3U8 Deep Inspector -->
+                <div id="inspectorContainer" class="viewport-layer hidden">
+                    <div class="inspector-card">
+                        <div class="inspector-header">
+                            <h3><i class="fa-solid fa-network-wired"></i> Direct AnimePahe CDN Breakdown</h3>
+                            <span class="bandwidth-badge">0 MB Server Load</span>
+                        </div>
+                        <div class="inspector-grid">
+                            <div class="inspect-field">
+                                <label>CDN Host Server</label>
+                                <div class="inspect-value" id="inspectHost">Loading...</div>
+                            </div>
+                            <div class="inspect-field">
+                                <label>Total Video Chunks (Segments)</label>
+                                <div class="inspect-value" id="inspectSegmentsCount">Loading...</div>
+                            </div>
+                            <div class="inspect-field full-width">
+                                <label>Master HLS Stream (.m3u8 URL)</label>
+                                <div class="code-copy-box">
+                                    <input type="text" id="inspectM3u8" readonly value="Loading...">
+                                    <button class="copy-btn" onclick="copyToClipboard('inspectM3u8')"><i class="fa-regular fa-copy"></i> Copy</button>
+                                </div>
+                            </div>
+                            <div class="inspect-field full-width">
+                                <label>AES-128 Encryption Key URL</label>
+                                <div class="code-copy-box">
+                                    <input type="text" id="inspectKey" readonly value="None (Unencrypted or embedded)">
+                                    <button class="copy-btn" onclick="copyToClipboard('inspectKey')"><i class="fa-regular fa-copy"></i> Copy</button>
+                                </div>
+                            </div>
+                            <div class="inspect-field full-width">
+                                <label>Direct Stream Command (VLC / MPV / FFmpeg)</label>
+                                <div class="terminal-box" id="inspectCommand">
+                                    <code>vlc "URL" :http-referrer="https://kwik.cx/"</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quality & Audio Selector Bar -->
+            <div class="stream-controls-bar">
+                <div class="controls-left">
+                    <span class="control-label"><i class="fa-solid fa-sliders"></i> Stream Quality & Audio:</span>
+                    <div id="qualityPillsList" class="quality-pills-container">
+                        <!-- Populated dynamically: 1080p BD (JP), 720p BD (ENG DUB), etc. -->
+                        <span class="loading-shimmer">Loading stream options...</span>
+                    </div>
+                </div>
+
+                <div class="controls-right">
+                    <div id="downloadDropdownWrapper" class="dropdown-wrapper">
+                        <button class="download-trigger-btn" onclick="toggleDownloadsMenu()">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Direct Downloads</span>
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        <div id="downloadsMenu" class="dropdown-menu hidden">
+                            <!-- Populated with pahe.win download links -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Selected Anime Details & Episode Selector Grid -->
+        <section id="episodeSection" class="episodes-section hidden">
+            <div class="section-title-row">
+                <div class="title-with-poster">
+                    <img id="currentAnimePoster" class="mini-anime-poster" src="" alt="Poster">
+                    <div>
+                        <h3 id="currentAnimeTitle" class="section-heading">Anime Title</h3>
+                        <p id="currentAnimeDetails" class="section-subheading">Episodes List</p>
+                    </div>
+                </div>
+
+                <!-- Audio Filter Tabs -->
+                <div class="ep-filters">
+                    <button class="filter-chip active" onclick="filterEpisodes('all')">All Episodes</button>
+                    <button class="filter-chip" onclick="filterEpisodes('sub')">Sub Only</button>
+                    <button class="filter-chip" onclick="filterEpisodes('dub')">Dub Only</button>
+                </div>
+            </div>
+
+            <!-- Episodes Cards Grid -->
+            <div id="episodesGrid" class="episodes-grid">
+                <!-- Dynamically injected episode cards -->
+            </div>
+
+            <!-- Episodes Pagination -->
+            <div id="episodesPagination" class="pagination-bar hidden">
+                <button id="prevPageBtn" class="page-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+                <span id="pageInfoText" class="page-info">Page 1 of 1</span>
+                <button id="nextPageBtn" class="page-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </section>
+
+        <!-- Search Catalog / Anime Cards Grid Section -->
+        <section id="catalogSection" class="catalog-section">
+            <div class="catalog-header">
+                <div>
+                    <h3 id="catalogHeading" class="section-heading">Anime Catalog</h3>
+                    <p id="catalogSubheading" class="section-subheading">Search results from AnimePahe</p>
+                </div>
+                <div id="searchCounter" class="results-counter hidden">
+                    <span id="resultsCount">0</span> Titles Found
+                </div>
+            </div>
+
+            <!-- Loading Spinner State -->
+            <div id="catalogLoading" class="catalog-loader hidden">
+                <div class="spinner"></div>
+                <p>Querying AnimePahe through Cloudflare Bypass...</p>
+            </div>
+
+            <!-- Anime Cards Grid -->
+            <div id="animeCardsGrid" class="anime-cards-grid">
+                <!-- Cards injected dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>Built with ❤️ for testing AnimePahe CDN Direct Streaming · Zero Server Bandwidth</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/static/app.js"></script>
+</body>
+</html>

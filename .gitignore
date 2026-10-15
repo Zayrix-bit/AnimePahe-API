@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Playwright & Browser Sessions
+.browser_profile/
+*.log
+.tempmediaStorage/
+
+# Operating System & IDEs
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
