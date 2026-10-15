@@ -471,7 +471,7 @@ class AsyncAnimePaheScraper:
             self._playwright = None
 
     async def search(self, query: str, max_retries: int = 3) -> List[Dict[str, Any]]:
-        """Searches anime titles on AnimePahe with automatic 429 rate limit backoff."""
+        """Searches anime titles on AnimePahe with automatic 429 and Cloudflare challenge recovery."""
         for attempt in range(max_retries):
             async with self._lock:
                 if not self._page:
@@ -480,17 +480,28 @@ class AsyncAnimePaheScraper:
                 script = f"""async () => {{
                     try {{
                         const res = await fetch("/api?m=search&q=" + encodeURIComponent({json.dumps(query)}));
-                        if (res.status === 429) return {{ __status: 429, retry_after: res.headers.get("retry-after") }};
-                        return await res.json();
+                        const text = await res.text();
+                        if (!text || text.trim().startsWith("<") || res.status === 403 || res.status === 429 || res.status === 503) {{
+                            return {{ __challenge: true, status: res.status }};
+                        }}
+                        return JSON.parse(text);
                     }} catch(e) {{
-                        return {{ __error: e.message }};
+                        return {{ __challenge: true, error: e.message }};
                     }}
                 }}"""
                 data = await self._page.evaluate(script)
-                if isinstance(data, dict) and data.get("__status") == 429:
-                    retry_after = data.get("retry_after")
-                    delay = float(retry_after) if retry_after and retry_after.strip().isdigit() else (1.5 * (2 ** attempt)) + random.uniform(0.2, 0.6)
-                    print(f"[!] AnimePahe search rate limit (429) hit. Backing off for {delay:.2f}s (retry {attempt+1}/{max_retries})...")
+                if isinstance(data, dict) and data.get("__challenge"):
+                    delay = (1.5 * (2 ** attempt)) + random.uniform(0.2, 0.6)
+                    print(f"[!] AnimePahe Cloudflare challenge / 429 hit. Re-verifying Turnstile and waiting {delay:.2f}s (retry {attempt+1}/{max_retries})...")
+                    try:
+                        await self._page.goto(self.BASE_URL)
+                        for _ in range(12):
+                            t = await self._page.title()
+                            if "moment" not in t.lower() and ("anime" in t.lower() or "pahe" in t.lower()):
+                                break
+                            await asyncio.sleep(1)
+                    except Exception:
+                        pass
                     await asyncio.sleep(delay)
                     continue
                 if isinstance(data, dict) and "data" in data:
@@ -499,7 +510,7 @@ class AsyncAnimePaheScraper:
         return []
 
     async def get_episodes(self, anime_session: str, page: int = 1, max_retries: int = 3) -> Dict[str, Any]:
-        """Fetches release list / episodes for an anime by session ID with 429 backoff."""
+        """Fetches release list / episodes for an anime with 429 and Cloudflare challenge recovery."""
         for attempt in range(max_retries):
             async with self._lock:
                 if not self._page:
@@ -508,17 +519,28 @@ class AsyncAnimePaheScraper:
                 script = f"""async () => {{
                     try {{
                         const res = await fetch("/api?m=release&id={anime_session}&sort=asc&page={page}");
-                        if (res.status === 429) return {{ __status: 429, retry_after: res.headers.get("retry-after") }};
-                        return await res.json();
+                        const text = await res.text();
+                        if (!text || text.trim().startsWith("<") || res.status === 403 || res.status === 429 || res.status === 503) {{
+                            return {{ __challenge: true, status: res.status }};
+                        }}
+                        return JSON.parse(text);
                     }} catch(e) {{
-                        return {{ __error: e.message }};
+                        return {{ __challenge: true, error: e.message }};
                     }}
                 }}"""
                 data = await self._page.evaluate(script)
-                if isinstance(data, dict) and data.get("__status") == 429:
-                    retry_after = data.get("retry_after")
-                    delay = float(retry_after) if retry_after and retry_after.strip().isdigit() else (1.5 * (2 ** attempt)) + random.uniform(0.2, 0.6)
-                    print(f"[!] AnimePahe episodes rate limit (429) hit. Backing off for {delay:.2f}s (retry {attempt+1}/{max_retries})...")
+                if isinstance(data, dict) and data.get("__challenge"):
+                    delay = (1.5 * (2 ** attempt)) + random.uniform(0.2, 0.6)
+                    print(f"[!] AnimePahe episodes Cloudflare challenge / 429 hit. Re-verifying Turnstile and waiting {delay:.2f}s (retry {attempt+1}/{max_retries})...")
+                    try:
+                        await self._page.goto(self.BASE_URL)
+                        for _ in range(12):
+                            t = await self._page.title()
+                            if "moment" not in t.lower() and ("anime" in t.lower() or "pahe" in t.lower()):
+                                break
+                            await asyncio.sleep(1)
+                    except Exception:
+                        pass
                     await asyncio.sleep(delay)
                     continue
                 if isinstance(data, dict) and "data" in data:
