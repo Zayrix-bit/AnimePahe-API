@@ -1,5 +1,18 @@
 # ⚡ AnimePahe High-Performance Stream Resolver & Web Lab
 
+<p align="center">
+  <img src="https://img.shields.io/badge/PYTHON-3.10%2B%20%7C%203.12-4c1?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/FASTAPI-FRAMEWORK-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/UVICORN-ASGI%20SERVER-499848?style=for-the-badge&logo=gunicorn&logoColor=white" alt="Uvicorn">
+  <img src="https://img.shields.io/badge/PLAYWRIGHT-CHROMIUM-2EAD33?style=for-the-badge&logo=playwright&logoColor=white" alt="Playwright">
+  <img src="https://img.shields.io/badge/CURL__CFFI-CHROME%20124%20TLS-00599C?style=for-the-badge&logo=curl&logoColor=white" alt="curl-cffi">
+  <img src="https://img.shields.io/badge/ARTPLAYER-5.1%20HTML5-8B5CF6?style=for-the-badge&logo=html5&logoColor=white" alt="ArtPlayer">
+  <img src="https://img.shields.io/badge/HLS.JS-STREAMING%20CORE-FF6B6B?style=for-the-badge&logo=javascript&logoColor=white" alt="Hls.js">
+  <img src="https://img.shields.io/badge/CLOUDFLARE-TURNSTILE%20BYPASS-F38020?style=for-the-badge&logo=cloudflare&logoColor=white" alt="Cloudflare Bypass">
+  <img src="https://img.shields.io/badge/BANDWIDTH-0%20MB%20DIRECT%20CDN-10B981?style=for-the-badge&logo=speedtest&logoColor=white" alt="Zero Bandwidth">
+  <img src="https://img.shields.io/badge/LICENSE-MIT-black?style=for-the-badge" alt="MIT License">
+</p>
+
 > **A production-ready, ultra-fast scraping engine, reverse proxy gateway, and modern HTML5 streaming test lab for [AnimePahe](https://animepahe.pw/).**  
 > Resolves anime catalogs, paginated episodes, sub/dub options, direct AES-128 encrypted HLS master streams (`.m3u8`), and individual CDN video chunks (`.jpg` MPEG-TS segments) with **zero-delay fast-path unpacking** and **zero external bandwidth consumption**.
 
