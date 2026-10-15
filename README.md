@@ -1,6 +1,13 @@
-# ⚡ AnimePahe High-Performance Stream Resolver & Web Lab
+<p align="center">
+  <a href="https://github.com/Zayrix-bit/AnimePahe-API">
+    <img src="./assets/animepahe-logo.svg" alt="AnimePahe Logo" width="340">
+  </a>
+</p>
+
+<h1 align="center">⚡ AnimePahe High-Performance Stream Resolver & Web Lab</h1>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/ANIMEPAHE-OFFICIAL%20ENGINE-d5015b?style=for-the-badge" alt="AnimePahe Engine">
   <img src="https://img.shields.io/badge/PYTHON-3.10%2B%20%7C%203.12-4c1?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+">
   <img src="https://img.shields.io/badge/FASTAPI-FRAMEWORK-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
   <img src="https://img.shields.io/badge/UVICORN-ASGI%20SERVER-499848?style=for-the-badge&logo=gunicorn&logoColor=white" alt="Uvicorn">
